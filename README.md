@@ -56,16 +56,17 @@ Open your Claude Desktop config file in a text editor:
 | **Windows** | `%APPDATA%\Claude\claude_desktop_config.json` |
 | **macOS** | `~/Library/Application Support/Claude/claude_desktop_config.json` |
 
-Add the `"digikey"` entry to the `"mcpServers"` object. Replace the `cwd` path with the full path to your local copy of this repository:
+Add the `"digikey"` entry to the `"mcpServers"` object. Replace the paths below with the full path to your local copy of this repository and your `uv` executable.
+
+> **Finding your `uv` path:** Run `where uv` (Windows) or `which uv` (macOS/Linux) in a terminal to get the full path.
 
 **Windows example:**
 ```json
 {
   "mcpServers": {
     "digikey": {
-      "command": "uv",
-      "args": ["run", "python", "digikey_mcp_server.py"],
-      "cwd": "C:\\Users\\YourName\\projects\\digikey-mcp"
+      "command": "C:\\Users\\YourName\\AppData\\Local\\Programs\\Python\\Python312\\Scripts\\uv.exe",
+      "args": ["run", "--project", "C:\\Users\\YourName\\projects\\digikey-mcp", "python", "C:\\Users\\YourName\\projects\\digikey-mcp\\digikey_mcp_server.py"]
     }
   }
 }
@@ -76,15 +77,14 @@ Add the `"digikey"` entry to the `"mcpServers"` object. Replace the `cwd` path w
 {
   "mcpServers": {
     "digikey": {
-      "command": "uv",
-      "args": ["run", "python", "digikey_mcp_server.py"],
-      "cwd": "/Users/yourname/projects/digikey-mcp"
+      "command": "/usr/local/bin/uv",
+      "args": ["run", "--project", "/Users/yourname/projects/digikey-mcp", "python", "/Users/yourname/projects/digikey-mcp/digikey_mcp_server.py"]
     }
   }
 }
 ```
 
-> **Note:** If you already have other MCP servers in your config, merge the `"digikey"` entry into your existing `"mcpServers"` object — do not replace the entire file.
+> **Note:** Full paths are used for both the `uv` command and the script because Claude Desktop does not reliably resolve `cwd` or `PATH` on all platforms. If you already have other MCP servers in your config, merge the `"digikey"` entry into your existing `"mcpServers"` object — do not replace the entire file.
 
 ### 5. Restart Claude Desktop
 
