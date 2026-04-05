@@ -1,0 +1,679 @@
+swagger: "2.0"
+info:
+  title: ProductSearch Api
+  version: v4
+host: api.digikey.com
+basePath: /products/v4
+schemes:
+  - https
+paths:
+  /search/keyword:
+    post:
+      operationId: KeywordSearch
+      parameters:
+        - {in: query, name: includes, type: string}
+        - {in: header, name: X-DIGIKEY-Client-Id, required: true, type: string}
+        - {in: header, name: X-DIGIKEY-Locale-Language, type: string}
+        - {in: header, name: X-DIGIKEY-Locale-Currency, type: string}
+        - {in: header, name: X-DIGIKEY-Locale-Site, type: string}
+        - {in: header, name: X-DIGIKEY-Customer-Id, type: string}
+        - {in: body, name: body, schema: {$ref: '#/definitions/KeywordRequest'}}
+      responses:
+        "200": {schema: {$ref: '#/definitions/KeywordResponse'}}
+        "400": {schema: {$ref: '#/definitions/DKProblemDetails'}}
+  /search/{productNumber}/productdetails:
+    get:
+      operationId: ProductDetails
+      parameters:
+        - {in: path, name: productNumber, required: true, type: string}
+        - {in: query, name: manufacturerId, type: string}
+        - {in: query, name: includes, type: string}
+        - {in: header, name: X-DIGIKEY-Client-Id, required: true, type: string}
+        - {in: header, name: X-DIGIKEY-Locale-Language, type: string}
+        - {in: header, name: X-DIGIKEY-Locale-Currency, type: string}
+        - {in: header, name: X-DIGIKEY-Locale-Site, type: string}
+        - {in: header, name: X-DIGIKEY-Customer-Id, type: string}
+      responses:
+        "200": {schema: {$ref: '#/definitions/ProductDetails'}}
+  /search/manufacturers:
+    get:
+      operationId: Manufacturers
+      parameters:
+        - {in: header, name: X-DIGIKEY-Client-Id, required: true, type: string}
+        - {in: header, name: X-DIGIKEY-Locale-Language, type: string}
+        - {in: header, name: X-DIGIKEY-Locale-Currency, type: string}
+        - {in: header, name: X-DIGIKEY-Locale-Site, type: string}
+      responses:
+        "200": {schema: {$ref: '#/definitions/ManufacturersResponse'}}
+  /search/categories:
+    get:
+      operationId: Categories
+      responses:
+        "200": {schema: {$ref: '#/definitions/CategoriesResponse'}}
+  /search/categories/{categoryId}:
+    get:
+      operationId: CategoriesById
+      parameters:
+        - {in: path, name: categoryId, required: true, type: integer, format: int32}
+      responses:
+        "200": {schema: {$ref: '#/definitions/CategoryResponse'}}
+  /search/{productNumber}/digireelpricing:
+    get:
+      operationId: DigiReelPricing
+      parameters:
+        - {in: path, name: productNumber, required: true, type: string}
+        - {in: query, name: requestedQuantity, required: true, type: integer, format: int32}
+        - {in: header, name: X-DIGIKEY-Client-Id, required: true, type: string}
+        - {in: header, name: X-DIGIKEY-Locale-Language, type: string}
+        - {in: header, name: X-DIGIKEY-Locale-Currency, type: string}
+        - {in: header, name: X-DIGIKEY-Locale-Site, type: string}
+        - {in: header, name: X-DIGIKEY-Customer-Id, type: string}
+      responses:
+        "200": {schema: {$ref: '#/definitions/DigiReelPricing'}}
+  /search/{productNumber}/recommendedproducts:
+    get:
+      operationId: RecommendedProducts
+      parameters:
+        - {in: path, name: productNumber, required: true, type: string}
+        - {in: query, name: limit, type: integer, format: int32, default: 1}
+        - {in: query, name: searchOptionList, type: string}
+        - {in: query, name: excludeMarketPlaceProducts, type: boolean, default: false}
+        - {in: header, name: X-DIGIKEY-Client-Id, required: true, type: string}
+        - {in: header, name: X-DIGIKEY-Locale-Language, type: string}
+        - {in: header, name: X-DIGIKEY-Locale-Currency, type: string}
+        - {in: header, name: X-DIGIKEY-Locale-Site, type: string}
+      responses:
+        "200": {schema: {$ref: '#/definitions/RecommendedProductsResponse'}}
+  /search/{productNumber}/substitutions:
+    get:
+      operationId: Substitutions
+      parameters:
+        - {in: path, name: productNumber, required: true, type: string}
+        - {in: query, name: includes, type: string}
+        - {in: header, name: X-DIGIKEY-Client-Id, required: true, type: string}
+        - {in: header, name: X-DIGIKEY-Locale-Language, type: string}
+        - {in: header, name: X-DIGIKEY-Locale-Currency, type: string}
+        - {in: header, name: X-DIGIKEY-Locale-Site, type: string}
+        - {in: header, name: X-DIGIKEY-Customer-Id, type: string}
+      responses:
+        "200": {schema: {$ref: '#/definitions/ProductSubstitutesResponse'}}
+  /search/{productNumber}/associations:
+    get:
+      operationId: Associations
+      parameters:
+        - {in: path, name: productNumber, required: true, type: string}
+        - {in: header, name: X-DIGIKEY-Client-Id, required: true, type: string}
+        - {in: header, name: X-DIGIKEY-Locale-Language, type: string}
+        - {in: header, name: X-DIGIKEY-Locale-Currency, type: string}
+        - {in: header, name: X-DIGIKEY-Locale-Site, type: string}
+        - {in: header, name: X-DIGIKEY-Customer-Id, type: string}
+      responses:
+        "200": {schema: {$ref: '#/definitions/ProductAssociationsResponse'}}
+  /search/packagetypebyquantity/{productNumber}:
+    get:
+      operationId: PackageTypeByQuantity
+      parameters:
+        - {in: path, name: productNumber, required: true, type: string}
+        - {in: query, name: requestedQuantity, required: true, type: integer, format: int32}
+        - {in: query, name: packagingPreference, type: string, default: ""}
+        - {in: header, name: X-DIGIKEY-Client-Id, required: true, type: string}
+        - {in: header, name: X-DIGIKEY-Locale-Language, type: string}
+        - {in: header, name: X-DIGIKEY-Locale-Currency, type: string}
+        - {in: header, name: X-DIGIKEY-Locale-Site, type: string}
+        - {in: header, name: X-DIGIKEY-Customer-Id, type: string}
+      responses:
+        "200": {schema: {$ref: '#/definitions/PackageTypeByQuantityResponse'}}
+  /search/{productNumber}/media:
+    get:
+      operationId: Media
+      parameters:
+        - {in: path, name: productNumber, required: true, type: string}
+        - {in: header, name: X-DIGIKEY-Client-Id, required: true, type: string}
+        - {in: header, name: X-DIGIKEY-Locale-Language, type: string}
+        - {in: header, name: X-DIGIKEY-Locale-Currency, type: string}
+        - {in: header, name: X-DIGIKEY-Locale-Site, type: string}
+        - {in: header, name: X-DIGIKEY-Customer-Id, type: string}
+      responses:
+        "200": {schema: {$ref: '#/definitions/MediaResponse'}}
+  /search/{productNumber}/pricing:
+    get:
+      operationId: ProductPricing
+      parameters:
+        - {in: path, name: productNumber, required: true, type: string}
+        - {in: query, name: limit, type: integer, format: int32, default: 5}
+        - {in: query, name: offset, type: integer, format: int32, default: 0}
+        - {in: query, name: inStock, type: boolean, default: false}
+        - {in: query, name: excludeMarketplace, type: boolean, default: false}
+        - {in: query, name: excludeTariff, type: boolean, default: false}
+        - {in: header, name: X-DIGIKEY-Locale-Site, type: string}
+        - {in: header, name: X-DIGIKEY-Locale-Language, type: string}
+        - {in: header, name: X-DIGIKEY-Locale-Currency, type: string}
+        - {in: header, name: X-DIGIKEY-Customer-Id, type: string}
+        - {in: header, name: X-DIGIKEY-Client-Id, required: true, type: string}
+      responses:
+        "200": {schema: {$ref: '#/definitions/ProductPricingResponse'}}
+  /search/{productNumber}/alternatepackaging:
+    get:
+      operationId: AlternatePackaging
+      parameters:
+        - {in: path, name: productNumber, required: true, type: string}
+        - {in: header, name: X-DIGIKEY-Client-Id, required: true, type: string}
+        - {in: header, name: X-DIGIKEY-Locale-Language, type: string}
+        - {in: header, name: X-DIGIKEY-Locale-Currency, type: string}
+        - {in: header, name: X-DIGIKEY-Locale-Site, type: string}
+        - {in: header, name: X-DIGIKEY-Customer-Id, type: string}
+      responses:
+        "200": {schema: {$ref: '#/definitions/AlternatePackagingResponse'}}
+  /search/{productNumber}/pricingbyquantity/{requestedQuantity}:
+    get:
+      operationId: PricingOptionsByQuantity
+      parameters:
+        - {in: path, name: productNumber, required: true, type: string}
+        - {in: path, name: requestedQuantity, required: true, type: integer, format: int32}
+        - {in: query, name: manufacturerId, type: string}
+        - {in: header, name: X-DIGIKEY-Client-Id, required: true, type: string}
+        - {in: header, name: X-DIGIKEY-Locale-Language, type: string}
+        - {in: header, name: X-DIGIKEY-Locale-Currency, type: string}
+        - {in: header, name: X-DIGIKEY-Locale-Site, type: string}
+        - {in: header, name: X-DIGIKEY-Customer-Id, type: string}
+      responses:
+        "200": {schema: {$ref: '#/definitions/PricingOptionsForQuantityResponse'}}
+
+definitions:
+  AlternatePackaging:
+    type: object
+    properties:
+      AlternatePackaging: {type: array, items: {$ref: '#/definitions/ProductSummary'}}
+  AlternatePackagingResponse:
+    type: object
+    properties:
+      AlternatePackagings: {$ref: '#/definitions/AlternatePackaging'}
+      SearchLocaleUsed: {$ref: '#/definitions/IsoSearchLocale'}
+  BaseFilterV4:
+    type: object
+    properties:
+      Id: {type: integer, format: int32}
+      Value: {type: string}
+      ProductCount: {type: integer, format: int64}
+  BaseProduct:
+    type: object
+    properties:
+      Id: {type: integer, format: int32}
+      Name: {type: string}
+  CategoriesResponse:
+    type: object
+    properties:
+      ProductCount: {type: integer, format: int32}
+      Categories: {type: array, items: {$ref: '#/definitions/Category'}}
+      SearchLocaleUsed: {$ref: '#/definitions/IsoSearchLocale'}
+  Category:
+    type: object
+    properties:
+      CategoryId: {type: integer, format: int32}
+      ParentId: {type: integer, format: int32}
+      Name: {type: string}
+      ProductCount: {type: integer, format: int64}
+      Children: {type: array, items: {$ref: '#/definitions/Category'}}
+  CategoryNode:
+    type: object
+    properties:
+      CategoryId: {type: integer, format: int32}
+      ParentId: {type: integer, format: int32}
+      Name: {type: string}
+      ProductCount: {type: integer, format: int64}
+      NewProductCount: {type: integer, format: int64}
+      ImageUrl: {type: string}
+      SeoDescription: {type: string}
+      ChildCategories: {type: array, items: {$ref: '#/definitions/CategoryNode'}}
+  CategoryResponse:
+    type: object
+    properties:
+      Category: {$ref: '#/definitions/Category'}
+      SearchLocaleUsed: {$ref: '#/definitions/IsoSearchLocale'}
+  CategoryType:
+    type: object
+    properties:
+      CategoryId: {type: integer, format: int32}
+      Level: {type: integer, format: int32}
+      Name: {type: string}
+  Classifications:
+    type: object
+    properties:
+      ReachStatus: {type: string}
+      RohsStatus: {type: string}
+      MoistureSensitivityLevel: {type: string}
+      ExportControlClassNumber: {type: string}
+      HtsusCode: {type: string}
+  DKProblemDetails:
+    type: object
+    properties:
+      type: {type: string}
+      title: {type: string}
+      status: {type: integer, format: int32}
+      detail: {type: string}
+      instance: {type: string}
+      correlationId: {type: string}
+      errors: {type: object, additionalProperties: {type: array, items: {type: string}}, readOnly: true}
+  Description:
+    type: object
+    properties:
+      ProductDescription: {type: string}
+      DetailedDescription: {type: string}
+  DigiReelPricing:
+    type: object
+    properties:
+      ReelingFee: {type: number, format: double}
+      UnitPrice: {type: number, format: double}
+      ExtendedPrice: {type: number, format: double}
+      RequestedQuantity: {type: integer, format: int32}
+      SearchLocaleUsed: {$ref: '#/definitions/IsoSearchLocale'}
+  FilterId:
+    type: object
+    properties:
+      Id: {type: string}
+  FilterOptions:
+    type: object
+    properties:
+      Manufacturers: {type: array, items: {$ref: '#/definitions/BaseFilterV4'}}
+      Packaging: {type: array, items: {$ref: '#/definitions/BaseFilterV4'}}
+      Status: {type: array, items: {$ref: '#/definitions/BaseFilterV4'}}
+      Series: {type: array, items: {$ref: '#/definitions/BaseFilterV4'}}
+      ParametricFilters: {type: array, items: {$ref: '#/definitions/ParameterFilterOptionsResponse'}}
+      TopCategories: {type: array, items: {$ref: '#/definitions/TopCategory'}}
+      MarketPlaceFilters: {type: array, items: {type: string, enum: [NoFilter, ExcludeMarketPlace, MarketPlaceOnly]}}
+  FilterOptionsRequest:
+    type: object
+    properties:
+      ManufacturerFilter: {type: array, items: {$ref: '#/definitions/FilterId'}}
+      CategoryFilter: {type: array, items: {$ref: '#/definitions/FilterId'}}
+      StatusFilter: {type: array, items: {$ref: '#/definitions/FilterId'}}
+      PackagingFilter: {type: array, items: {$ref: '#/definitions/FilterId'}}
+      MarketPlaceFilter: {type: string, enum: [NoFilter, ExcludeMarketPlace, MarketPlaceOnly]}
+      TariffFilter: {type: string, enum: [None, ExcludeTariff, TariffOnly]}
+      SeriesFilter: {type: array, items: {$ref: '#/definitions/FilterId'}}
+      MinimumQuantityAvailable: {type: integer, format: int32}
+      ParameterFilterRequest: {$ref: '#/definitions/ParameterFilterRequest'}
+      SearchOptions: {type: array, items: {type: string, enum: [ChipOutpost, Has3DModel, HasCadModel, HasDatasheet, HasProductPhoto, InStock, NewProduct, NonRohsCompliant, NormallyStocking, RohsCompliant]}}
+  FilterValue:
+    type: object
+    properties:
+      ProductCount: {type: integer, format: int64}
+      ValueId: {type: string}
+      ValueName: {type: string}
+      RangeFilterType: {type: string, enum: [Min, Max, Range]}
+  Filters:
+    type: object
+    properties:
+      IsInStock: {type: boolean}
+      ExcludeMarketplace: {type: boolean}
+      ExcludeTariff: {type: boolean}
+  IsoSearchLocale:
+    type: object
+    properties:
+      Site: {type: string}
+      Language: {type: string}
+      Currency: {type: string}
+  KeywordRequest:
+    type: object
+    properties:
+      Keywords: {type: string}
+      Limit: {type: integer, format: int32}
+      Offset: {type: integer, format: int32}
+      FilterOptionsRequest: {$ref: '#/definitions/FilterOptionsRequest'}
+      SortOptions: {$ref: '#/definitions/SortOptions'}
+  KeywordResponse:
+    type: object
+    properties:
+      Products: {type: array, items: {$ref: '#/definitions/Product'}}
+      ProductsCount: {type: integer, format: int32}
+      ExactMatches: {type: array, items: {$ref: '#/definitions/Product'}}
+      FilterOptions: {$ref: '#/definitions/FilterOptions'}
+      SearchLocaleUsed: {$ref: '#/definitions/IsoSearchLocale'}
+      AppliedParametricFiltersDto: {type: array, items: {$ref: '#/definitions/Parameter'}}
+  Manufacturer:
+    type: object
+    properties:
+      Id: {type: integer, format: int32}
+      Name: {type: string}
+  ManufacturerInfo:
+    type: object
+    properties:
+      Id: {type: integer, format: int32}
+      Name: {type: string}
+  ManufacturersResponse:
+    type: object
+    properties:
+      Manufacturers: {type: array, items: {$ref: '#/definitions/ManufacturerInfo'}}
+  MediaLinks:
+    type: object
+    properties:
+      MediaType: {type: string}
+      Title: {type: string}
+      SmallPhoto: {type: string}
+      Thumbnail: {type: string}
+      Url: {type: string}
+  MediaResponse:
+    type: object
+    properties:
+      MediaLinks: {type: array, items: {$ref: '#/definitions/MediaLinks'}}
+  PackageType:
+    type: object
+    properties:
+      Id: {type: integer, format: int32}
+      Name: {type: string}
+  PackageTypeByQuantityProduct:
+    type: object
+    properties:
+      RecommendedQuantity: {type: integer, format: int32}
+      DigiKeyProductNumber: {type: string}
+      QuantityAvailable: {type: integer, format: int32}
+      ProductDescription: {type: string}
+      DetailedDescription: {type: string}
+      ManufacturerName: {type: string}
+      ManufacturerProductNumber: {type: string}
+      MinimumOrderQuantity: {type: integer, format: int32}
+      PrimaryDatasheetUrl: {type: string}
+      PrimaryPhotoUrl: {type: string}
+      ProductStatus: {type: string}
+      ManufacturerLeadWeeks: {type: string}
+      ManufacturerWarehouseQuantity: {type: integer, format: int32}
+      RohsStatus: {type: string}
+      RoHSCompliant: {type: boolean}
+      Category: {$ref: '#/definitions/CategoryNode'}
+      ReachStatus: {type: string}
+      MoistureSensitivityLevel: {type: string}
+      HtsusCode: {type: string}
+      ExportControlClassNumber: {type: string}
+      PackageType: {$ref: '#/definitions/PackageType'}
+      MaxQuantityForDistribution: {type: integer, format: int64}
+      StandardPackage: {type: integer, format: int32}
+      TariffActive: {type: boolean}
+      QuantityOnOrder: {type: integer, format: int32}
+      StandardPricing: {type: array, items: {$ref: '#/definitions/PriceBreak'}}
+      MyPricing: {type: array, items: {$ref: '#/definitions/PriceBreak'}}
+      ProductUrl: {type: string}
+      MarketPlace: {type: boolean}
+      Supplier: {type: string}
+      StockNote: {type: string}
+      PackageTypes: {type: array, items: {type: string}}
+  PackageTypeByQuantityResponse:
+    type: object
+    properties:
+      Products: {type: array, items: {$ref: '#/definitions/PackageTypeByQuantityProduct'}}
+  Parameter:
+    type: object
+    properties:
+      Id: {type: integer, format: int32}
+      Text: {type: string}
+      Priority: {type: integer, format: int32}
+  ParameterFilterOptionsResponse:
+    type: object
+    properties:
+      Category: {$ref: '#/definitions/BaseFilterV4'}
+      ParameterType: {type: string}
+      ParameterId: {type: integer, format: int32}
+      ParameterName: {type: string}
+      FilterValues: {type: array, items: {$ref: '#/definitions/FilterValue'}}
+  ParameterFilterRequest:
+    type: object
+    properties:
+      CategoryFilter: {$ref: '#/definitions/FilterId'}
+      ParameterFilters: {type: array, items: {$ref: '#/definitions/ParametricCategory'}}
+  ParameterValue:
+    type: object
+    properties:
+      ParameterId: {type: integer, format: int32}
+      ParameterText: {type: string}
+      ParameterType: {type: string, enum: [String, Integer, Double, UnitOfMeasure, CoupledUnitOfMeasure, RangeUnitOfMeasure]}
+      ValueId: {type: string}
+      ValueText: {type: string}
+  ParametricCategory:
+    type: object
+    properties:
+      ParameterId: {type: integer, format: int32}
+      FilterValues: {type: array, items: {$ref: '#/definitions/FilterId'}}
+  PriceBreak:
+    type: object
+    properties:
+      BreakQuantity: {type: integer, format: int32}
+      UnitPrice: {type: number, format: double}
+      TotalPrice: {type: number, format: double}
+  PriceSettingsUsed:
+    type: object
+    properties:
+      SearchLocaleUsed: {$ref: '#/definitions/IsoSearchLocale'}
+      CustomerIdUsed: {type: integer, format: int32}
+  PricingOptionsForQuantity:
+    type: object
+    properties:
+      PricingOption: {type: string, enum: [Exact, MinimumOrderQuantity, BetterValue, MaxOrderQuantity]}
+      TotalQuantityPriced: {type: integer, format: int32}
+      TotalPrice: {type: number, format: double}
+      QuantityAvailable: {type: integer, format: int32}
+      Products: {type: array, items: {$ref: '#/definitions/PricingOptionsForQuantityProduct'}}
+  PricingOptionsForQuantityProduct:
+    type: object
+    properties:
+      DigiKeyProductNumber: {type: string}
+      QuantityPriced: {type: integer, format: int32}
+      MinimumOrderQuantity: {type: integer, format: int32}
+      ExtendedPrice: {type: number, format: double}
+      UnitPrice: {type: number, format: double}
+      PackageType: {$ref: '#/definitions/PackageType'}
+      TariffInformation: {$ref: '#/definitions/TariffInformation'}
+      Marketplace: {type: boolean}
+  PricingOptionsForQuantityResponse:
+    type: object
+    properties:
+      RequestedProduct: {type: string}
+      RequestedQuantity: {type: integer, format: int32}
+      ProductUrl: {type: string}
+      ManufacturerPartNumber: {type: string}
+      Manufacturer: {$ref: '#/definitions/Manufacturer'}
+      Description: {$ref: '#/definitions/Description'}
+      SettingsUsed: {$ref: '#/definitions/PriceSettingsUsed'}
+      MyPricingOptions: {type: array, items: {$ref: '#/definitions/PricingOptionsForQuantity'}}
+      StandardPricingOptions: {type: array, items: {$ref: '#/definitions/PricingOptionsForQuantity'}}
+  Product:
+    type: object
+    properties:
+      Description: {$ref: '#/definitions/Description'}
+      Manufacturer: {$ref: '#/definitions/Manufacturer'}
+      ManufacturerProductNumber: {type: string}
+      UnitPrice: {type: number, format: double}
+      ProductUrl: {type: string}
+      DatasheetUrl: {type: string}
+      PhotoUrl: {type: string}
+      ProductVariations: {type: array, items: {$ref: '#/definitions/ProductVariation'}}
+      QuantityAvailable: {type: integer, format: int64}
+      ProductStatus: {$ref: '#/definitions/ProductStatusV4'}
+      BackOrderNotAllowed: {type: boolean}
+      NormallyStocking: {type: boolean}
+      Discontinued: {type: boolean}
+      EndOfLife: {type: boolean}
+      Ncnr: {type: boolean}
+      PrimaryVideoUrl: {type: string}
+      Parameters: {type: array, items: {$ref: '#/definitions/ParameterValue'}}
+      BaseProductNumber: {$ref: '#/definitions/BaseProduct'}
+      Category: {$ref: '#/definitions/CategoryNode'}
+      DateLastBuyChance: {type: string, format: date-time}
+      ManufacturerLeadWeeks: {type: string}
+      ManufacturerPublicQuantity: {type: integer, format: int32}
+      Series: {$ref: '#/definitions/Series'}
+      ShippingInfo: {type: string}
+      Classifications: {$ref: '#/definitions/Classifications'}
+      OtherNames: {type: array, items: {type: string}}
+  ProductAssociations:
+    type: object
+    properties:
+      Kits: {type: array, items: {$ref: '#/definitions/ProductSummary'}}
+      MatingProducts: {type: array, items: {$ref: '#/definitions/ProductSummary'}}
+      AssociatedProducts: {type: array, items: {$ref: '#/definitions/ProductSummary'}}
+      ForUseWithProducts: {type: array, items: {$ref: '#/definitions/ProductSummary'}}
+  ProductAssociationsResponse:
+    type: object
+    properties:
+      ProductAssociations: {$ref: '#/definitions/ProductAssociations'}
+      SearchLocaleUsed: {$ref: '#/definitions/IsoSearchLocale'}
+  ProductDetails:
+    type: object
+    properties:
+      SearchLocaleUsed: {$ref: '#/definitions/IsoSearchLocale'}
+      Product: {$ref: '#/definitions/Product'}
+  ProductPricing:
+    type: object
+    properties:
+      ManufacturerProductNumber: {type: string}
+      Manufacturer: {$ref: '#/definitions/Manufacturer'}
+      Description: {$ref: '#/definitions/Description'}
+      QuantityAvailable: {type: integer, format: int32}
+      ProductUrl: {type: string}
+      IsDiscontinued: {type: boolean}
+      NormallyStocking: {type: boolean}
+      IsObsolete: {type: boolean}
+      ManufacturerLeadWeeks: {type: string}
+      ManufacturerPublicQuantity: {type: integer, format: int32}
+      StandardPackage: {type: integer, format: int32}
+      ExportControlClassNumber: {type: string}
+      HtsusCode: {type: string}
+      MoistureSensitivityLevel: {type: string}
+      IsBoNotAllowed: {type: boolean}
+      IsNcnr: {type: boolean}
+      Categories: {type: array, items: {$ref: '#/definitions/CategoryType'}}
+      ContainsLithium: {type: boolean}
+      ContainsMercury: {type: boolean}
+      IsEndOfLife: {type: boolean}
+      OtherNames: {type: array, items: {type: string}}
+      ProductVariations: {type: array, items: {$ref: '#/definitions/ProductPricingVariation'}}
+  ProductPricingResponse:
+    type: object
+    properties:
+      ProductPricings: {type: array, items: {$ref: '#/definitions/ProductPricing'}}
+      ProductsCount: {type: integer, format: int32}
+      SettingsUsed: {$ref: '#/definitions/SettingsUsed'}
+  ProductPricingVariation:
+    type: object
+    properties:
+      DigiKeyProductNumber: {type: string}
+      QuantityAvailableforPackageType: {type: integer, format: int32}
+      MinimumOrderQuantity: {type: integer, format: int32}
+      MaxQuantityForDistribution: {type: integer, format: int64}
+      PackageType: {$ref: '#/definitions/PackageType'}
+      MarketPlace: {type: boolean}
+      StandardPricing: {type: array, items: {$ref: '#/definitions/PriceBreak'}}
+      MyPricing: {type: array, items: {$ref: '#/definitions/PriceBreak'}}
+      IsTariffActive: {type: boolean}
+      DigiReelingFee: {type: number, format: double}
+  ProductStatusV4:
+    type: object
+    properties:
+      Id: {type: integer, format: int32}
+      Status: {type: string}
+  ProductSubstitute:
+    type: object
+    properties:
+      SubstituteType: {type: string}
+      ProductUrl: {type: string}
+      Description: {type: string}
+      Manufacturer: {$ref: '#/definitions/Manufacturer'}
+      ManufacturerProductNumber: {type: string}
+      UnitPrice: {type: string}
+      QuantityAvailable: {type: integer, format: int32}
+      DigiKeyProductNumber: {type: string}
+  ProductSubstitutesResponse:
+    type: object
+    properties:
+      ProductSubstitutesCount: {type: integer, format: int32}
+      ProductSubstitutes: {type: array, items: {$ref: '#/definitions/ProductSubstitute'}}
+      SearchLocaleUsed: {$ref: '#/definitions/IsoSearchLocale'}
+  ProductSummary:
+    type: object
+    properties:
+      ProductUrl: {type: string}
+      Description: {type: string}
+      Manufacturer: {$ref: '#/definitions/Manufacturer'}
+      ManufacturerProductNumber: {type: string}
+      UnitPrice: {type: string}
+      QuantityAvailable: {type: integer, format: int32}
+      DigiKeyProductNumber: {type: string}
+  ProductVariation:
+    type: object
+    properties:
+      DigiKeyProductNumber: {type: string}
+      PackageType: {$ref: '#/definitions/PackageType'}
+      StandardPricing: {type: array, items: {$ref: '#/definitions/PriceBreak'}}
+      MyPricing: {type: array, items: {$ref: '#/definitions/PriceBreak'}}
+      MarketPlace: {type: boolean}
+      TariffActive: {type: boolean}
+      Supplier: {$ref: '#/definitions/Supplier'}
+      QuantityAvailableforPackageType: {type: integer, format: int32}
+      MaxQuantityForDistribution: {type: integer, format: int64}
+      MinimumOrderQuantity: {type: integer, format: int32}
+      StandardPackage: {type: integer, format: int32}
+      DigiReelFee: {type: number, format: double}
+  Recommendation:
+    type: object
+    properties:
+      ProductNumber: {type: string}
+      RecommendedProducts: {type: array, items: {$ref: '#/definitions/RecommendedProduct'}}
+      SearchLocaleUsed: {$ref: '#/definitions/IsoSearchLocale'}
+  RecommendedProduct:
+    type: object
+    properties:
+      DigiKeyProductNumber: {type: string}
+      ManufacturerProductNumber: {type: string}
+      ManufacturerName: {type: string}
+      PrimaryPhoto: {type: string}
+      ProductDescription: {type: string}
+      QuantityAvailable: {type: integer, format: int64}
+      UnitPrice: {type: number, format: double}
+      ProductUrl: {type: string}
+      OtherNames: {type: array, items: {type: string}}
+  RecommendedProductsResponse:
+    type: object
+    properties:
+      Recommendations: {type: array, items: {$ref: '#/definitions/Recommendation'}}
+  Series:
+    type: object
+    properties:
+      Id: {type: integer, format: int32}
+      Name: {type: string}
+  SettingsUsed:
+    type: object
+    properties:
+      CustomerId: {type: integer, format: int32}
+      SearchLocale: {$ref: '#/definitions/IsoSearchLocale'}
+      Filters: {$ref: '#/definitions/Filters'}
+  SortOptions:
+    type: object
+    properties:
+      Field: {type: string, enum: [None, Packaging, ProductStatus, DigiKeyProductNumber, ManufacturerProductNumber, Manufacturer, MinimumQuantity, QuantityAvailable, Price, Supplier, PriceManufacturerStandardPackage]}
+      SortOrder: {type: string, enum: [Ascending, Descending]}
+  Supplier:
+    type: object
+    properties:
+      Id: {type: integer, format: int32}
+      Name: {type: string}
+  TariffInformation:
+    type: object
+    properties:
+      TariffActive: {type: boolean}
+  TopCategory:
+    type: object
+    properties:
+      RootCategory: {$ref: '#/definitions/TopCategoryNode'}
+      Category: {$ref: '#/definitions/TopCategoryNode'}
+      Score: {type: number, format: double}
+      ImageUrl: {type: string}
+  TopCategoryNode:
+    type: object
+    properties:
+      Id: {type: integer, format: int32}
+      Name: {type: string}
+      ProductCount: {type: integer, format: int64}
+securityDefinitions:
+  apiKeySecurity: {type: apiKey, name: X-DIGIKEY-Client-Id, in: header}
+  oauth2AccessCodeSecurity: {type: oauth2, flow: accessCode, authorizationUrl: 'https://api.digikey.com/v1/oauth2/authorize', tokenUrl: 'https://api.digikey.com/v1/oauth2/token'}
+security:
+  - apiKeySecurity: []
+    oauth2ApplicationSecurity: []
