@@ -53,13 +53,23 @@ def get_access_token():
     logger.info("Successfully obtained access token")
     return resp.json()["access_token"]
 
-# Get access token at startup
+# Attempt to get access token at startup (non-fatal)
 logger.info("=== STARTING DIGIKEY MCP SERVER ===")
-access_token = get_access_token()
-logger.info("=== SERVER READY ===")
+access_token = None
+try:
+    access_token = get_access_token()
+    logger.info("=== SERVER READY ===")
+except Exception as e:
+    logger.warning(f"Could not obtain access token at startup: {e}")
+    logger.warning("Server will start, but API calls will fail until valid credentials are configured in .env")
 
 def _get_headers(customer_id: str = "0"):
     """Get standard headers for DigiKey API requests."""
+    if not access_token:
+        raise ValueError(
+            "No valid access token. Please set CLIENT_ID and CLIENT_SECRET in your .env file "
+            "with valid DigiKey API credentials, then restart the server."
+        )
     return {
         "Authorization": f"Bearer {access_token}",
         "X-DIGIKEY-Client-Id": CLIENT_ID,
