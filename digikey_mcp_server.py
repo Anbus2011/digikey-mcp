@@ -297,6 +297,135 @@ def get_digi_reel_pricing(product_number: str, requested_quantity: int, customer
     return _make_request("GET", url, headers)
 
 
+def _price_break_at_qty(standard_pricing, requested_quantity, moq):
+    """Unit price for requested_quantity from a variation's StandardPricing.
+
+    Selects the price break with the largest BreakQuantity <= requested_quantity.
+    If the requested quantity is below the smallest break or below MOQ, returns
+    the smallest break's price with is_estimate=True (rendered with an asterisk).
+    Returns (unit_price, is_estimate); unit_price is None when there is no pricing.
+    """
+    breaks = sorted(
+        (b for b in (standard_pricing or [])
+         if b.get("BreakQuantity") is not None and b.get("UnitPrice") is not None),
+        key=lambda b: b["BreakQuantity"],
+    )
+    if not breaks:
+        return None, False
+    applicable = [b for b in breaks if b["BreakQuantity"] <= requested_quantity]
+    below_smallest = not applicable
+    below_moq = moq is not None and requested_quantity < moq
+    if below_smallest or below_moq:
+        return breaks[0]["UnitPrice"], True
+    return applicable[-1]["UnitPrice"], False
+
+
+def _best_variation(product, requested_quantity):
+    """Pick the ProductVariation with the lowest unit price at requested_quantity.
+
+    Returns (variation, unit_price, is_estimate). Falls back to the first
+    variation with a None price when none of them carry pricing.
+    """
+    variations = product.get("ProductVariations") or []
+    best = None  # (unit_price, is_estimate, variation)
+    for v in variations:
+        unit_price, is_estimate = _price_break_at_qty(
+            v.get("StandardPricing"), requested_quantity, v.get("MinimumOrderQuantity")
+        )
+        if unit_price is None:
+            continue
+        if best is None or unit_price < best[0]:
+            best = (unit_price, is_estimate, v)
+    if best is not None:
+        return best[2], best[0], best[1]
+    return (variations[0] if variations else {}), None, False
+
+
+def _format_manufacturer_comparison(part_number, requested_quantity, matches):
+    """Render duplicate-MPN keyword ExactMatches as a Markdown comparison table.
+
+    Pricing varies widely between manufacturers of the same MPN, so this compares
+    them side by side (cheapest in-stock first) instead of dumping raw JSON.
+    """
+    def val(v, fallback="N/A"):
+        return fallback if v is None or v == "" else v
+
+    mpn = (matches[0].get("ManufacturerProductNumber") if matches else None) or part_number
+
+    rows = []
+    for m in matches:
+        variation, unit_price, is_estimate = _best_variation(m, requested_quantity)
+
+        dk_pn = variation.get("DigiKeyProductNumber")
+        pkg = (variation.get("PackageType") or {}).get("Name")
+        dk_pn_cell = f"{dk_pn} ({pkg})" if (dk_pn and pkg) else val(dk_pn)
+
+        qty_available = m.get("QuantityAvailable")
+        has_qty = isinstance(qty_available, (int, float))
+        zero_stock = not (has_qty and qty_available > 0)
+        notes = []
+        if zero_stock:
+            notes.append("no stock")
+        if m.get("BackOrderNotAllowed"):
+            notes.append("no backorder")
+        stock_cell = f"{qty_available:,}" if has_qty else val(qty_available)
+        if notes:
+            stock_cell += " (" + ", ".join(notes) + ")"
+
+        lead = m.get("ManufacturerLeadWeeks")
+        lead_cell = f"{lead} weeks" if lead not in (None, "") else "N/A"
+
+        if unit_price is not None:
+            up_cell = f"${unit_price:,.5f}" + ("*" if is_estimate else "")
+            ext_cell = f"${unit_price * requested_quantity:,.2f}"
+        else:
+            up_cell = "N/A"
+            ext_cell = "N/A"
+
+        rows.append({
+            "mfr": val((m.get("Manufacturer") or {}).get("Name")),
+            "dk_pn": val(dk_pn),
+            "dk_pn_cell": dk_pn_cell,
+            "status": val((m.get("ProductStatus") or {}).get("Status")),
+            "stock_cell": stock_cell,
+            "moq": val(variation.get("MinimumOrderQuantity")),
+            "lead_cell": lead_cell,
+            "up_cell": up_cell,
+            "ext_cell": ext_cell,
+            "unit_price": unit_price,
+            "zero_stock": zero_stock,
+            "is_estimate": is_estimate,
+        })
+
+    # Cheapest first, but zero-stock parts always last regardless of price.
+    rows.sort(key=lambda r: (r["zero_stock"], r["unit_price"] if r["unit_price"] is not None else float("inf")))
+
+    lines = []
+    lines.append(
+        f"Multiple manufacturers found for {mpn} — comparing {len(rows)} exact matches "
+        f"at quantity {requested_quantity}:"
+    )
+    lines.append("")
+    lines.append("| Manufacturer | DigiKey PN | Status | In Stock | MOQ | Lead Time | Unit Price @ Qty | Ext. Price @ Qty |")
+    lines.append("|---|---|---|---|---|---|---|---|")
+    for r in rows:
+        lines.append(
+            f"| {r['mfr']} | {r['dk_pn_cell']} | {r['status']} | {r['stock_cell']} | "
+            f"{r['moq']} | {r['lead_cell']} | {r['up_cell']} | {r['ext_cell']} |"
+        )
+    lines.append("")
+    if any(r["is_estimate"] for r in rows):
+        lines.append(
+            "_* unit price shown is the smallest price break; requested quantity is "
+            "below the smallest break or the minimum order quantity._"
+        )
+        lines.append("")
+    for r in rows:
+        lines.append(f"{r['mfr']}: re-run part_lookup with '{r['dk_pn']}' for full details")
+
+    return "\n".join(lines)
+
+
 @mcp.tool()
 def part_lookup(part_number: str, requested_quantity: int = 1, customer_id: str = "0"):
     """Look up a part by DigiKey or manufacturer part number and return availability, pricing, and pricing tiers as formatted Markdown.
@@ -323,11 +452,15 @@ def part_lookup(part_number: str, requested_quantity: int = 1, customer_id: str 
         )
     except requests.exceptions.HTTPError as e:
         # Ambiguous ("Duplicate Products ... provide manufacturerId") or not found:
-        # fall back to keyword search and return the ExactMatches array.
+        # fall back to keyword search and render a Markdown comparison of the
+        # exact matches so pricing across manufacturers is easy to compare.
         logger.warning(f"Direct lookup failed for {part_number} ({e}); falling back to keyword search")
         kw_url = f"{API_BASE}/products/v4/search/keyword"
         kw = _make_request("POST", kw_url, headers, {"Keywords": part_number, "Limit": 10})
-        return kw.get("ExactMatches", [])
+        matches = kw.get("ExactMatches", [])
+        if not matches:
+            return f"No exact matches found for {part_number}."
+        return _format_manufacturer_comparison(part_number, requested_quantity, matches)
 
     def val(value, fallback="N/A"):
         if value is None or value == "":
